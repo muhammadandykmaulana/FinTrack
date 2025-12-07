@@ -1,0 +1,82 @@
+
+/* Transisi Fade In yang halus */
+@keyframes fadeIn {
+	from { opacity: 0; transform: translateY(10px); }
+	to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+	animation: fadeIn 0.4s ease-out forwards;
+}
+
+/* LOGIKA NAVIGASI (FIX BUG SPLASH SCREEN) */
+/* Masalah sebelumnya: Activity tidak hilang karena tidak ada display: none */
+
+/* 1. Secara default, sembunyikan semua section activity */
+.activity {
+	display: none !important;
+	width: 100%;
+}
+
+/* 2. Jika memiliki class 'active', tampilkan */
+.activity.active {
+	display: flex !important;
+}
+
+/* 3. Khusus Dashboard harus Column arahnya */
+#activity-dashboard.active {
+	flex-direction: column !important;
+}
+
+/* Styling tambahan untuk Input */
+.input-group {
+	position: relative;
+}
+
+.input-icon {
+	position: absolute;
+	left: 16px;
+	top: 50%;
+	transform: translateY(-50%);
+	color: #9ca3af;
+	font-size: 1.1rem;
+	pointer-events: none;
+	transition: color 0.3s;
+}
+
+.input-field {
+	width: 100%;
+	padding: 12px 16px 12px 48px; /* Padding kiri besar untuk icon */
+	border-radius: 12px;
+	border: 1px solid #e2e8f0;
+	background-color: #f8fafc;
+	outline: none;
+	transition: all 0.3s;
+	font-size: 0.95rem;
+	color: #334155;
+}
+
+.input-field:focus {
+	border-color: #059669; /* Primary color */
+	background-color: #ffffff;
+	box-shadow: 0 0 0 4px rgba(5, 150, 105, 0.1);
+}
+
+.input-field:focus + .input-icon,
+.input-group:focus-within .input-icon {
+	color: #059669;
+}
+
+/* Safe area untuk iPhone recent models */
+.pb-safe {
+	padding-bottom: env(safe-area-inset-bottom, 20px);
+}
+
+/* Hide scrollbar but keep functionality */
+.no-scrollbar::-webkit-scrollbar {
+	display: none;
+}
+.no-scrollbar {
+	-ms-overflow-style: none;
+	scrollbar-width: none;
+}
