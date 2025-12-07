@@ -6,7 +6,7 @@
 // =========================================
 // 1. DATA STRUCTURES & STATE MANAGEMENT
 // =========================================
-
+const STORAGE_KEY = 'fintrack_data_v1';
 let state = {
 	activity: 'splash',      
 	tab: 'home',             
@@ -21,23 +21,72 @@ let state = {
 	
 	wallets: [
 		{ id: 1, name: 'Tunai', balance: 500000, color: 'bg-emerald-500' },
-		{ id: 2, name: 'BCA', balance: 2500000, color: 'bg-blue-600' }
+		{ id: 2, name: 'BCA Syariah', balance: 2500000, color: 'bg-blue-600' }
 	],
 
 	searchQuery: ''
 };
+// =========================================
+// 2. LOCAL STORAGE HELPERS
+// =========================================
+
+function loadData() {
+	const rawData = localStorage.getItem(STORAGE_KEY);
+	if (rawData) {
+
+		try {
+			const parsedData = JSON.parse(rawData);
+			// Update state dengan data dari storage
+			state.transactions = parsedData.transactions || state.transactions;
+			state.wallets = parsedData.wallets || state.wallets;
+			state.username = parsedData.username || ''; // Retrieve username status
+			console.log('Data loaded from LocalStorage');
+		} catch (e) {
+			console.error('Error parsing data from LocalStorage', e);
+		}
+	}
+}
+
+function saveData() {
+	const dataToSave = {
+		transactions: state.transactions,
+		wallets: state.wallets,
+		username: state.username
+	};
+
+	localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
+	console.log('Data saved to LocalStorage');
+}
 
 // =========================================
-// 2. INITIALIZATION & LIFECYCLE
+// 3. INITIALIZATION & LIFECYCLE
 // =========================================
 
 document.addEventListener('DOMContentLoaded', () => {
+	// 1. Load data dari LocalStorage saat aplikasi mulai
+	loadData();
 	
-	// Timer Splash Screen (Pindah ke login setelah 3 detik)
-	setTimeout(() => {
-		navigateTo('login');
-	}, 3000);
+	// 2. Logic Check Login Status
+	// Jika username sudah ada di storage, langsung ke Dashboard (Skip Splash & Login)
 
+	if (state.username) {
+		const displayUser = document.getElementById('display-username');
+		if(displayUser) displayUser.innerText = state.username;
+		
+		// Langsung ke dashboard
+		navigateTo('dashboard');
+		renderTransactions();
+		renderWallets();
+		calculateTotal();
+
+	} else {
+
+		// Jika belum login, Timer Splash Screen (Pindah ke login setelah 3 detik)
+		setTimeout(() => {
+			navigateTo('login');
+		}, 3000);
+	}
+	
 	// Set nilai default input tanggal ke hari ini
 	const dateInput = document.getElementById('inp-date');
 	if(dateInput) dateInput.valueAsDate = new Date();
@@ -53,7 +102,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // =========================================
-// 3. NAVIGATION FUNCTIONS
+// 4. NAVIGATION FUNCTIONS
 // =========================================
 
 function navigateTo(activityId) {
@@ -131,7 +180,7 @@ function switchTab(tabName) {
 }
 
 // =========================================
-// 4. AUTHENTICATION LOGIC
+// 5. AUTHENTICATION LOGIC
 // =========================================
 
 function handleLogin(e) {
@@ -144,7 +193,7 @@ function handleLogin(e) {
 		state.username = user;
 		const displayUser = document.getElementById('display-username');
 		if(displayUser) displayUser.innerText = user;
-		
+		saveData();
 		navigateTo('dashboard');
 		renderTransactions();
 		renderWallets();
@@ -154,6 +203,14 @@ function handleLogin(e) {
 	}
 }
 
+
+function handleLogout() {
+	// Hapus sesi username
+	state.username = '';
+	saveData();
+	// Kembali ke login
+	navigateTo('login');
+}
 
 function handleReset() {
 	const email = document.getElementById('forgot-email').value;
@@ -166,7 +223,7 @@ function handleReset() {
 	}
 }
 // =========================================
-// 5. TRANSACTION LOGIC (CRUD)
+// 6. TRANSACTION LOGIC (CRUD)
 // =========================================
 
 function setTransactionType(type) {
@@ -226,7 +283,7 @@ function saveTransaction() {
 		state.transactions.unshift(payload);
 		alert("Transaksi Disimpan!");
 	}
-
+	saveData();
 	resetForm();
 	renderTransactions();
 	calculateTotal();
@@ -266,6 +323,7 @@ function editTransaction(id) {
 function deleteTransaction(id) {
 	if (confirm('Hapus data ini?')) {
 		state.transactions = state.transactions.filter(t => t.id !== id);
+		saveData();
 		renderTransactions();
 		calculateTotal();
 	}
@@ -320,7 +378,7 @@ function renderTransactions() {
 }
 
 // =========================================
-// 7. WALLET LOGIC
+// 7. CRU WALLET LOGIC
 // =========================================
 
 function toggleWalletForm() {
@@ -337,12 +395,13 @@ function saveWallet() {
 	let color = 'bg-gray-500';
 	const lower = name.toLowerCase();
 	if(lower.includes('dana')) color = 'bg-blue-500';
+	if(lower.includes('linkaja')) color = 'bg-red-500';
 	if(lower.includes('shopee')) color = 'bg-orange-500';
 	if(lower.includes('ovo')) color = 'bg-purple-600';
 	if(lower.includes('gopay')) color = 'bg-sky-500';
 
 	state.wallets.push({ id: Date.now(), name, balance: parseInt(balance), color });
-	
+	saveData();
 	document.getElementById('wallet-name').value = '';
 	document.getElementById('wallet-balance').value = '';
 	toggleWalletForm();
